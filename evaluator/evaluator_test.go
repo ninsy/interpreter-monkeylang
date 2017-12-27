@@ -262,3 +262,20 @@ func TestFunctionObject(t *testing.T) {
 		t.Fatalf("body is not '(x + 2)', got=%q", fn.Body.String())
 	}
 }
+
+func TestFunctionCalls(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let ident = fn(x) { return x; }; ident(5);", 5},
+		{"let double = fn(x) { return x * 2; }; double(5);", 10},
+		{"let add = fn(x, y) { return x + y; }; add(5,5);", 10},
+		{"let add = fn(x, y) { return x + y; }; add(5+5, add(5,5));", 20},
+		{"fn(x) { return x; }(5)", 5},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
