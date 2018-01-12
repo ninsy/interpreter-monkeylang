@@ -25,6 +25,10 @@ if (5 < 10) {
 
 10 == 10;
 10 != 9;
+"somestring"
+"some string"
+[1, 2];
+{"a": "b"}
 `
 
 	tests := []struct {
@@ -104,9 +108,22 @@ if (5 < 10) {
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
+		{token.STRING, "somestring"},
+		{token.STRING, "some string"},
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
+		{token.LBRACE, "{"},
+		{token.STRING, "a"},
+		{token.COLON, ":"},
+		{token.STRING, "b"},
+		{token.RBRACE, "}"},		
 		{token.EOF, ""},
 	}
-	
+
 	l := New(input)
 
 	for i, tt := range tests {

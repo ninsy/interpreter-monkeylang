@@ -7,39 +7,43 @@ const (
 	INT       = "INT"
 	ASSIGN    = "="
 	PLUS      = "+"
-	MINUS			= "-"
-	BANG			= "!"
-	ASTERISK	= "*"
-	SLASH			= "/"
-	LT				= "<"
-	GT				= ">"
+	MINUS     = "-"
+	BANG      = "!"
+	ASTERISK  = "*"
+	SLASH     = "/"
+	LT        = "<"
+	GT        = ">"
 	LBRACE    = "{"
 	RBRACE    = "}"
-	LPAREN		= "("
-	RPAREN		= ")"
-	COMMA			= ","
-	SEMICOLON	= ";"
-	EQ				= "=="
-	NOT_EQ		= "!="
+	LPAREN    = "("
+	RPAREN    = ")"
+	COMMA     = ","
+	SEMICOLON = ";"
+	EQ        = "=="
+	NOT_EQ    = "!="
 	FUNCTION  = "FUNCTION"
 	LET       = "LET"
-	TRUE			= "TRUE"
-	FALSE 		= "FALSE"
-	IF 				= "IF"
-	ELSE			= "ELSE"
-	RETURN 		= "RETURN"
+	TRUE      = "TRUE"
+	FALSE     = "FALSE"
+	IF        = "IF"
+	ELSE      = "ELSE"
+	RETURN    = "RETURN"
+	STRING    = "STRING"
+	LBRACKET  = "["
+	RBRACKET  = "]"
+	COLON			= ":"
 )
 
 // TODO: add filename and line number / column info
 
 var keywords = map[string]TokenType{
-	"fn":  		FUNCTION,
-	"let": 		LET,
-	"true": 	TRUE,
-	"false": 	FALSE,
-	"if":			IF,
-	"else":		ELSE,
-	"return":	RETURN,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 type TokenType string // TODO: might not need to use string, just byte enums

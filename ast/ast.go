@@ -89,6 +89,27 @@ type CallExpression struct {
 	Arguments []Expression
 }
 
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+type ArrayLiteral struct {
+	Token    token.Token
+	Elements []Expression
+}
+
+type IndexExpression struct {
+	Token token.Token
+	Left Expression
+	Index Expression
+}
+
+type ObjectLiteral struct {
+	Token token.Token
+	Pairs map[Expression]Expression
+}
+
 type Program struct {
 	Statements []Statement
 }
@@ -238,6 +259,58 @@ func (ce *CallExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
+
+	return out.String()
+}
+
+func (sl *StringLiteral) expressionNode()      {}
+func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
+func (sl *StringLiteral) String() string       { return sl.Token.Literal }
+
+func (al *ArrayLiteral) expressionNode()      {}
+func (al *ArrayLiteral) TokenLiteral() string { return al.Token.Literal }
+func (al *ArrayLiteral) String() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, el := range al.Elements {
+		elements = append(elements, el.String())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
+func (ide *IndexExpression) expressionNode() {}
+func (ide *IndexExpression) TokenLiteral() string { return ide.Token.Literal} 
+func (ide *IndexExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ide.Left.String())
+	out.WriteString("[")
+	out.WriteString(ide.Index.String())
+	out.WriteString("])")
+
+	return out.String()
+}
+
+func (ol *ObjectLiteral) expressionNode() {}
+func (ol *ObjectLiteral) TokenLiteral() string { return ol.Token.Literal }
+func (ol *ObjectLiteral) String() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for k, v := range ol.Pairs {
+		pairs = append(pairs, k.String() + ": " + v.String())
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
 
 	return out.String()
 }

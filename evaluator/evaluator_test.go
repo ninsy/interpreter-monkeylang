@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"math"
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
@@ -277,5 +278,123 @@ func TestFunctionCalls(t *testing.T) {
 
 	for _, tt := range tests {
 		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
+
+func TestStringLiteral(t *testing.T) {
+	input := `"Hello, World!"`
+
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("object is not string, got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != "Hello, World!" {
+		t.Errorf("String has wrong value: %s", str.Value)
+	}
+}
+
+func TestStringConcatOperator(t *testing.T) {
+	input := `"Hello" + ", " + "World!"`
+
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+
+	if !ok {
+		t.Fatalf("evaluated object is not string, got=%q (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != "Hello, World!" {
+		t.Errorf("String has wrong value, got=%q", str.Value)
+	}
+}
+
+func TestBuiltinParserMethods(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"parseFloat('abc')", math.NaN},
+		{"parseFloat('3.14abc')", 3.14},
+		{"parseFloat('a3.14')", math.NaN},
+		{"parseFloat(NaN)", math.NaN},
+		{"parseFloat('-4.12')", 4.12},
+		{"parseInt(' 0xF')", 16},
+		{"parseInt('1111')", 1111},
+		{"parseInt('1111', 2)", 15},
+		{"parseInt('15 * 3', 10)", 15},
+		{"parseInt('Hello')", math.NaN},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		// add support for float, nans
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		}
+	}
+}
+
+func TestArrayLiterals(t *testing.T) {
+	input := "[1, 2 * 2, 3 + 3]"
+
+	evaluated := testEval(input)
+	result, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Fatalf("object is not an array, got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if len(result.Elements) != 3 {
+		t.Fatalf("wrong number of elements, should have 3, got=%d", len(result.Elements))
+	}
+
+	testIntegerObject(t, result.Elements[0], 1)
+	testIntegerObject(t, result.Elements[1], 4)
+	testIntegerObject(t, result.Elements[2], 6)
+	
+}
+
+func TestArrayIndexExprs(t *testing.T) {
+	tests := []struct {
+		input string
+		expected interface{}
+	}{
+		{
+			"[1,2,3][0]",
+			'a',
+		},
+		{
+			"[1,2,3][2]",
+			3,
+		},
+		{
+			"[1,2,3][2]",
+			3,
+		},
+		{
+			"let i = 3; [1,2,3,4,5][i]",
+			4,
+		},
+		{
+			"[1,2,3][5]",
+			nil,
+		},
+		{
+			"[1,2,3][-5]",
+			nil,
+		},
+	}
+
+	for _, tt := range tests {
+		eval := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, eval, int64(integer))
+		} else {
+			testNullObject(t, eval)
+		}
 	}
 }
