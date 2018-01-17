@@ -89,7 +89,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(idx) {
 			return idx
 		}
-		return evalIndexExpression(left, index)
+		return evalIndexExpression(left, idx)
+	case *ast.ObjectLiteral:
+		return evalObjectLiteral(node, env)
 	}
 	return nil
 }
@@ -316,6 +318,8 @@ func evalIndexExpression(left, idx object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
 		return evalArrayIndexExpression(left, idx)
+	case left.Type() == object.OBJ_LITERAL_OBJ:
+		return evalObjectLiteralIndexExpression(left, idx)
 	default:
 		return newError("Index on %s[%s] not supported yet", left.Type(), idx.Type())
 	}
@@ -331,6 +335,48 @@ func evalArrayIndexExpression(arr, idx object.Object) object.Object {
 	}
 
 	return arrObj.Elements[index]
+}
+
+func evalObjectLiteralIndexExpression(obj, idx object.Object) object.Object {
+	objectLiteral := obj.(*object.ObjectLiteral)
+
+	key, ok := idx.(object.Hashable)
+	if !ok {
+		return newError("Can't hash object of type %s", idx.Type())
+	}
+	pair, ok := objectLiteral.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+	return pair.Value
+}
+
+func evalObjectLiteral(
+	node *ast.ObjectLiteral,
+	env *object.Environment,
+) object.Object {
+
+	pairs := make(map[object.HashKey]object.HashPair)
+
+	for nodeKey, nodeValue := range node.Pairs {
+		key := Eval(nodeKey, env)
+		if isError(key) {
+			return key
+		}
+		hashKey, ok := key.(object.Hashable)
+		if !ok {
+			return newError("Can't hash object of type %s", key.Type())
+		}
+
+		val := Eval(nodeValue, env)
+		if isError(val) {
+			return val
+		}
+
+		hashed := hashKey.HashKey()
+		pairs[hashed] = object.HashPair{Key: key, Value: val}
+	}
+	return &object.ObjectLiteral{Pairs: pairs}
 }
 
 func extendFunctionEnv(

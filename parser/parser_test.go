@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strconv"
 	"fmt"
 	"monkey/ast"
 	"monkey/lexer"
@@ -761,6 +762,133 @@ func TestParsingObjectLiteralKeys(t *testing.T) {
 
 		testIntegerLiteral(t, v, expectedVal)
 	}
+}
+
+func TestParsingEmptyObjectLiteral(t *testing.T) {
+	input := `{}`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	obj, ok := stmt.Expression.(*ast.ObjectLiteral)
+	if !ok {
+		t.Fatalf("exp is not object literal, got=%T", stmt.Expression )
+	}
+
+	if len(obj.Pairs) != 0 {
+		t.Errorf("obj shouldn't have key-value pairs, got=%d of them", len(obj.Pairs))
+	}
+}
+
+func TestParsingObjectLiteralIntKeys(t *testing.T) {
+	input := `{ 1: 3, 2: 4 }`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	obj, ok := stmt.Expression.(*ast.ObjectLiteral)
+	if !ok {
+		t.Fatalf("exp is not object literal, got=%T", stmt.Expression )
+	}
+
+	if len(obj.Pairs) != 2 {
+		t.Errorf("obj should have 2 key-value pairs, got=%d of them", len(obj.Pairs))
+	}
+
+	for k, v := range obj.Pairs {
+		integer, ok := k.(*ast.IntegerLiteral)
+		if !ok {
+			t.Errorf("key is not integer, got=%T", k)
+			return
+		}
+	}
+}
+
+func TestParsingObjectLiteralBoolKeys(t *testing.T) {
+	input := `{ true: 1, false: 2 }`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	obj, ok := stmt.Expression.(*ast.ObjectLiteral)
+	if !ok {
+		t.Fatalf("exp is not object literal, got=%T", stmt.Expression )
+	}
+
+	if len(obj.Pairs) != 2 {
+		t.Errorf("obj should have 2 key-value pairs, got=%d of them", len(obj.Pairs))
+	}
+
+	for k, v := range obj.Pairs {
+		boolean, ok := k.(*ast.Boolean)
+		if !ok {
+			t.Errorf("key is not boolean, got=%T", k)
+			return
+		}
+	}
+}
+
+func TestParsingObjectLiteralExpressionVals(t *testing.T) {
+	input := `
+		{
+			"one": 2 - 1,
+			"two": 1 + 1,
+		}
+	`
+
+	testValues := map[string]func(ast.Expression) {
+		"one": func(e ast.Expression) {
+			testInfixExpression(t, e, 2, "-", 1)
+		},
+		"two": func(e ast.Expression) {
+			testInfixExpression(t, e, 1, "+", 1)		
+		},
+	}
+	
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	obj, ok := stmt.Expression.(*ast.ObjectLiteral)
+	if !ok {
+		t.Fatalf("exp is not object literal, got=%T", stmt.Expression )
+	}
+
+	if len(obj.Pairs) != 2 {
+		t.Errorf("obj should have 2 key-value pairs, got=%d of them", len(obj.Pairs))
+	}
+
+	for k, v := range obj.Pairs {
+		stringKey, ok := k.(*ast.StringLiteral);
+		if !ok {
+			t.Errorf("key is not ast.StringLiteral, got=%T", k)
+			return
+		}
+
+		testFn, ok := testValues[stringKey.String()]
+		if !ok {
+			t.Errorf("no tester func found for %s", stringKey.String())
+			return
+		}
+
+		testFn(v)
+	}
+
 }
 
 func testLiteralExpression(
