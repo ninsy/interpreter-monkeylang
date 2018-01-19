@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"errors"
 	"monkey/object"
 )
@@ -50,6 +51,15 @@ var builtinMethods = map[string]*object.BuiltinMethod{
 		Fn: func(args ...object.Object) object.Object {
 			return filter.Fn(args...)			
 		},
+	},
+}
+
+var puts = &object.BuiltinMethod{
+	Fn: func(args ...object.Object) object.Object {
+		for _, arg := range args {
+			fmt.Println(arg.Inspect())
+		}
+		return NULL
 	},
 }
 
