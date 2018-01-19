@@ -15,6 +15,8 @@ import (
 // TODO: support floats
 // TODO: prototypes
 // TODO: make reduce to accepts other types ( now only int, array) as an initial value
+// TODO: reassigments
+// TODO: loops
 
 func main() {
 	repl.Start(os.Stdin, os.Stdout)
