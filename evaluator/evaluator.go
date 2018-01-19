@@ -12,6 +12,23 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
+var applyFunction func(fn object.Object, args []object.Object) object.Object
+
+func init() {
+	applyFunction = func(fn object.Object, args []object.Object) object.Object {
+			switch fn := fn.(type) {
+			case *object.Function:
+				extendedEnv := extendFunctionEnv(fn, args)
+				evaluated := Eval(fn.Body, extendedEnv)
+				return unwrapReturnValue(evaluated)
+			case *object.BuiltinMethod:
+				return fn.Fn(args...)
+			default:
+				return newError("not a function, got=%s", fn.Type())
+			}
+		}
+}
+
 func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
@@ -298,20 +315,6 @@ func evalExpressions(
 		result = append(result, evaluated)
 	}
 	return result
-}
-
-func applyFunction(fn object.Object, args []object.Object) object.Object {
-
-	switch fn := fn.(type) {
-	case *object.Function:
-		extendedEnv := extendFunctionEnv(fn, args)
-		evaluated := Eval(fn.Body, extendedEnv)
-		return unwrapReturnValue(evaluated)
-	case *object.BuiltinMethod:
-		return fn.Fn(args...)
-	default:
-		return newError("not a function, got=%s", fn.Type())
-	}
 }
 
 func evalIndexExpression(left, idx object.Object) object.Object {

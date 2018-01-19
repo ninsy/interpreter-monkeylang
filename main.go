@@ -14,6 +14,7 @@ import (
 // TODO: parseInt, parseFloat, isNan impl
 // TODO: support floats
 // TODO: prototypes
+// TODO: make reduce to accepts other types ( now only int, array) as an initial value
 
 func main() {
 	repl.Start(os.Stdin, os.Stdout)
